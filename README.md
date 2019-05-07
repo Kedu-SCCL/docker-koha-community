@@ -201,4 +201,37 @@ Accept all the options presented
 
 http://libraryname.myDNSname.org
 
+## Manually start services
+
+In case that we need to start the image again we need to follow below steps:
+
+1.Start the container
+
+```
+docker start koha
+```
+
+2. Connect to the container
+
+```
+docker exec -ti koha bash
+```
+
+3. Start database
+
+```
+/usr/bin/mysqld_safe 2>&1&
+```
+
+4. Start apache
+
+```
+service apache2 start
+```
+
+5. Test it
+
+http://libraryname-intra.myDNSname.org
+http://libraryname.myDNSname.org
+
 
