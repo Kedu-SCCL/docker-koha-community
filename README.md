@@ -154,7 +154,12 @@ So in this case:
 9.Install perl package
 
 ```
+apt-get install build-essential
+
+perl -MCPAN -e shell
+
 install JSON::Validator
+
 install Mojolicious::Plugin::OpenAPI
 ```
 
