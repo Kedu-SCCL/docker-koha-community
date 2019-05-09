@@ -2,40 +2,34 @@
 
 Build docker image to install Koha Community
 
-## Install
+## Install local environment
 
 Below the quick and dirty instructions to have a local docker image up and running
 
-
-1.(Optional) Cleanup
+1.(Optional) cleanup
 
 ```
 docker stop koha && docker rm koha
 ```
 
-2.Start the container
+2.Create container
 
 ```
 docker run --name koha \
-  --network=network-mariadb \
   -ti \
   --cap-add=SYS_NICE \
   --cap-add=DAC_READ_SEARCH \
   -d debian:testing
 ```
 
-3.Connect to the container
+3.Install packages
 
 ```
 docker exec -ti koha bash
-```
 
-4.Install packages
-
-```
 apt-get update
 
-apt-get install wget gnupg vim
+apt-get install -y wget gnupg vim
 
 wget -q -O- https://debian.koha-community.org/koha/gpg.asc | apt-key add -
 
@@ -44,199 +38,220 @@ echo 'deb http://debian.koha-community.org/koha stable main' | tee /etc/apt/sour
 apt-get update
 ```
 
-This last step takes a lot of time:
+This step will take around 14':
 
 ```
-apt-get install koha-common
+apt-get install -y koha-common
 ```
 
-5.(Optional) Just in case commit the image
+4.More install and configuration
 
 ```
-exit
-
-docker ps | grep koha
-```
-
-Expected output similar to:
-
-```
-09799371eeed        debian:testing      "bash"                   8 minutes ago       Up 7 minutes                            koha
-```
-
-Commit the image:
-
-```
-docker commit 09799371eeed localhost/koha:0.1
-```
-
-In case that we want to restart the whole installation process but from this point:
-
-```
-docker run --name koha \
-  --network=network-mariadb \
-  -ti \
-  --cap-add=SYS_NICE \
-  --cap-add=DAC_READ_SEARCH \
-  -d localhost/koha:0.1
-```
-
-6.Koha community post installation (command line)
-
-```
-docker exec -ti koha bash
-
 cp /etc/koha/koha-sites.conf /etc/koha/koha-sites.conf.bak
+
+vim /etc/koha/koha-sites.conf
 ```
 
-At the moment we will **NOT** change this file
+Content:
+
+```
+# NOTE: for a complete list of valid options please read koha-create(8)
+
+## Apache virtual hosts creation variables
+#
+# Please note that the URLs are built like this:
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+DOMAIN=".kedu.cat"
+INTRAPORT="80"
+INTRAPREFIX=""
+INTRASUFFIX=".admin"
+OPACPORT="80"
+OPACPREFIX=""
+OPACSUFFIX=""
+
+## Default data to be loaded
+#
+# DEFAULTSQL: filename
+# Specify an SQL file with default data to load during instance creation
+# The SQL file can be optionally compressed with gzip
+# default: (empty)
+DEFAULTSQL=""
+
+## Zebra global configuration variables
+#
+# ZEBRA_MARC_FORMAT: 'marc21' | 'normarc' | 'unimarc'
+# Specifies the MARC records format for indexing
+# default: 'marc21'
+ZEBRA_MARC_FORMAT="marc21"
+
+# ZEBRA_LANGUAGE: 'cs' | 'en' | 'es' | 'fr' | 'gr' | 'nb' | 'ru' | 'uk'
+# Primary language for Zebra indexing
+# default: 'en'
+ZEBRA_LANGUAGE="en"
+
+## Memcached global configuration variables
+#
+# USE_MEMCACHED: 'yes' | 'no'
+# Make the created instance use memcached. Can be altered later.
+# default: 'yes'
+USE_MEMCACHED="no"
+
+# MEMCACHED_SERVERS: comma separated list of memcached servers (ip:port)
+# Specify a list of memcached servers for the Koha instance
+# default: '127.0.0.1:11211'
+#MEMCACHED_SERVERS="127.0.0.1:11211"
+
+# MEMCACHED_PREFIX:
+# Specify a string to be used as prefix for defining the memcached namespace
+# for the created instance.
+# default: 'koha_'
+#MEMCACHED_PREFIX="koha_"
+```
+
+More commands:
 
 ```
 a2enmod rewrite cgi
 
 service apache2 restart
-```
 
-7.Install mariadb server
-
-```
-apt-get install mariadb-server
+apt-get install -y mariadb-server
 
 /usr/bin/mysqld_safe 2>&1&
-
-mysql_secure_installation
 ```
 
-Accept all the proposed options
+5.Create database
 
 ```
-vim /etc/mysql/koha-common.cnf
-```
-
-Add password created in the "mysql_secure_installation" step
-
-8.Koha post installation (command line)
-
-Create the library, in this case we will use **libraryname**
-
-```
-koha-create --create-db libraryname
+koha-create --create-db koha
 ```
 
 Expected output similar to:
 
 ```
-...
 Koha instance is empty, no staff user created.
 [....] Restarting Apache httpd web server: apache2AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.28.0.3. Set the 'ServerName' directive globally to suppress this message
-. ok
+. ok 
 [ ok ] Starting Koha indexing daemon for libraryname:.
-
 ```
 
-Create the password, take note of the output
+The username of the database connection will be **koha_koha**
+
+6.Get database credentials password
 
 ```
-koha-passwd libraryname
+koha-passwd koha
 ```
 
-Expected output similar to:
+Take note of the output:
 
 ```
-WPZmVwqI5BQvyIEl
+LlS1mOdJRtqRP0PX
 ```
 
-So in this case:
+And press 'Enter'
 
-**Username**: koha_libraryname
-**Password**: WPZmVwqI5BQvyIEl
-
-9.Install perl package
+7.Install translation
 
 ```
-apt-get install build-essential
-
-perl -MCPAN -e shell
-
-install JSON::Validator
-
-install Mojolicious::Plugin::OpenAPI
+koha-translate --install ca-ES
 ```
 
-10.Configure DNS
-
-In this case we will edit the docker host "/etc/hosts" file to match the previous step settings
-
-Get docker container private IP address
+8.Install needed perl packages
 
 ```
-docker inspect koha | grep IPAddress
+apt-get install -y perlbrew
+
+perlbrew install-cpanm
 ```
 
 Output similar to:
 
 ```
-            "SecondaryIPAddresses": null,
-            "IPAddress": "",
-                    "IPAddress": "172.28.0.3",
+/root/perl5/perlbrew/bin/cpanm
 ```
 
-Edit file:
+Install perl packages
 
 ```
+/root/perl5/perlbrew/bin/cpanm install JSON::Validator
+/root/perl5/perlbrew/bin/cpanm install Mojolicious::Plugin::OpenAPI
+```
+
+9.Exit
+
+```
+exit
+```
+
+TODO: clean this section
+
+docker inspect --format '{{ .NetworkSettings.IPAddress }}' koha
+
+	172.17.0.2
+
 sudo vim /etc/hosts
-```
 
-And add:
+172.17.0.2      koha.myDNSname.org
+172.17.0.2      koha-intra.myDNSname.org
 
-```
-172.28.0.3      libraryname.myDNSname.org
-172.28.0.3      libraryname-intra.myDNSname.org
-```
+sudo service dnsmasq restart
 
-11.Koha configuration (browser)
+	Test it
 
-http://libraryname-intra.myDNSname.org
+http://koha.myDNSname.org
+http://koha-intra.myDNSname.org
 
-Introduce the credentials of step 8
 
-Accept all the options presented
+User: koha_koha
+Password: LlS1mOdJRtqRP0PX
+Click "Login"
 
-12.Test fronend
+Select "ca-ES"
+Click "Continue..."
 
-http://libraryname.myDNSname.org
+Click "Continue..."
 
-## Manually start services
+Click "Continue..."
 
-In case that we need to start the image again we need to follow below steps:
+Click "Continue..."
 
-1.Start the container
+Click "Continue..."
 
-```
-docker start koha
-```
+Click "Continue..."
 
-2. Connect to the container
+Click "Continue..."
 
-```
-docker exec -ti koha bash
-```
+Select "Marc21"
+Click "Continue..."
 
-3. Start database
+Select all
+Click "Import"
 
-```
-/usr/bin/mysqld_safe 2>&1&
-```
+4'
 
-4. Start apache
+Error:
+[Thu May 9 13:53:14 2019] install.pl: DBD::mysql::st execute failed: Incorrect integer value: '' for column `koha_koha`.`auth_subfield_structure`.`linkid` at row 148 at /usr/share/perl5/DBIx/RunSQL.pm line 278, <$args{...}> chunk 1. 
+Click "setup...."
 
-```
-service apache2 start
-```
+Congratulations message
+Click link
 
-5. Test it
+Full admin data
+IMPORTANT: here you setup the account
+Library: Centerville
+Patron category: Board
+Click "Envia"
 
-http://libraryname-intra.myDNSname.org
-http://libraryname.myDNSname.org
+Leave default values
+Click "Envia"
+
+Click "Start using koha"
+
+
+
+
+
 
 
