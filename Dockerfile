@@ -6,7 +6,8 @@ MAINTAINER Kedu SCCL "info@kedu.coop"
 RUN apt-get update && apt-get install -y \
   wget \
   gnupg \
-  mariadb-server \
+#  mariadb-server \
+  mariadb-client-10.3 \
   perlbrew
 
 RUN wget -q -O- https://debian.koha-community.org/koha/gpg.asc | apt-key add -
