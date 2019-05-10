@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+
+  koha-db:
+    container_name: koha-db
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: koha
+
+  koha:
+    container_name: koha
+    image: localhost/koha:0.1
+    cap_add:
+        - SYS_NICE
+        - DAC_READ_SEARCH
+    depends_on:
+        - koha-db
+    environment:
+      LIBRARY_NAME: mylibrary
+      SLEEP: 3
+      INTRAPORT: 8080
+      DB_HOST: koha-db
+      DB_ROOT_PASSWORD: koha
+    ports:
+      - "80:80"
+      - "8080:8080"
