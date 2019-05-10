@@ -10,6 +10,7 @@ INTRASUFFIX="${INTRASUFFIX:-}"
 OPACPORT="${OPACPORT:-80}"
 OPACPREFIX="${OPACPREFIX:-}"
 OPACSUFFIX="${OPACSUFFIX:-}"
+DB_PORT="${DB_PORT:-3306}"
 
 # 1st docker container execution
 if [ ! -f /etc/configured ]; then
@@ -29,8 +30,12 @@ if [ ! -f /etc/configured ]; then
     sed -i "s/_OPACSUFFIX_/$OPACSUFFIX/g" /etc/koha/koha-sites.conf
 
     echo "Fixing apache2 listening ports"
-    echo "Listen $INTRAPORT" >> /etc/apache2/ports.conf
-
+    if [ "80" != "$INTRAPORT" ]; then
+        echo "Listen $INTRAPORT" >> /etc/apache2/ports.conf
+    fi
+    if [ "80" != "$OPACPORT" ] && [ $INTRAPORT != $OPACPORT ]; then
+        echo "Listen $OPACPORT" >> /etc/apache2/ports.conf
+    fi
 
     echo "Modifying /etc/mysql/koha-common.cnf"
     sed -i "s/_DB_HOST_/$DB_HOST/g" /etc/mysql/koha-common.cnf
