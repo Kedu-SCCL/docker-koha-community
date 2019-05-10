@@ -6,7 +6,6 @@ MAINTAINER Kedu SCCL "info@kedu.coop"
 RUN apt-get update && apt-get install -y \
   wget \
   gnupg \
-#  mariadb-server \
   mariadb-client-10.3 \
   perlbrew
 
@@ -23,7 +22,7 @@ RUN /root/perl5/perlbrew/bin/cpanm install JSON::Validator
 
 RUN /root/perl5/perlbrew/bin/cpanm install Mojolicious::Plugin::OpenAPI
 
-#RUN a2enmod rewrite cgi
+RUN a2enmod rewrite cgi mpm_itk
 
 # Koha specific stuff
 
