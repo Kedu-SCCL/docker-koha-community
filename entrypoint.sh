@@ -57,12 +57,19 @@ if [ ! -f /etc/configured ]; then
     echo "Password: type 'docker exec -ti `hostname` koha-passwd $LIBRARY_NAME'" to display it
     echo "===================================================="
     date > /etc/configured
+
+    while true
+    do
+        # Needed because 'koha-create' restarts apache and puts process in background"
+        sleep 3600
+    done
 fi
 
-apachectl -D FOREGROUND
+echo "Looks already configured"
+echo "===================================================="
+echo "IMPORTANT: credentials needed to post-installation through your browser"
+echo "Username: koha_$LIBRARY_NAME"
+echo "Password: type 'docker exec -ti `hostname` koha-passwd $LIBRARY_NAME'" to display it
+echo "===================================================="
 
-while true
-do
-    # Needed because 'koha-create' restarts apache and puts process in background"
-    sleep 3600
-done
+apachectl -D FOREGROUND
