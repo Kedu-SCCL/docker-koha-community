@@ -56,6 +56,16 @@ log_database_credentials () {
     echo "===================================================="
 }
 
+install_koha_translate_languages () {
+    echo "Installing koha translate languages defined by KOHA_TRANSLATE_LANGUAGES"
+    IFS=',' read -ra LIST <<< "$KOHA_TRANSLATE_LANGUAGES"
+    for i in "${LIST[@]}"; do
+        koha-translate --install $i
+    done
+}
+
+install_koha_translate_languages
+
 # 1st docker container execution
 if [ ! -f /etc/configured ]; then
     #code that need to run only one time ....
