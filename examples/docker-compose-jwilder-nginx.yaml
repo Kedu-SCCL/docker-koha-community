@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+
+  koha-db:
+    container_name: koha-db
+    image: mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: koha
+    networks:
+      - network-koha
+
+  koha:
+    container_name: koha
+    image: localhost/koha:0.1
+    restart: unless-stopped
+    cap_add:
+        - SYS_NICE
+        - DAC_READ_SEARCH
+    depends_on:
+        - koha-db
+    environment:
+      LIBRARY_NAME: "koha"
+      SLEEP: 3
+      DOMAIN: ".example.com"
+      INTRAPORT: 80
+      INTRASUFFIX: ".admin"
+      DB_HOST: koha-db
+      DB_ROOT_PASSWORD: koha
+      VIRTUAL_HOST: "koha.example.com,koha.admin.example.com"
+      VIRTUAL_PORT: "80"
+      VIRTUAL_PROTO: "http"
+      LETSENCRYPT_HOST: "koha.example.com,koha.admin.example.com"
+      LETSENCRYPT_EMAIL: "info@example.com"
+    networks:
+      - network-koha
+      - network-nginx-proxy
+
+networks:
+  network-nginx-proxy:
+    external:
+      name: network-nginx-proxy
+  network-koha:
+    name: network-koha
+

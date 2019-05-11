@@ -71,8 +71,6 @@ if [ ! -f /etc/configured ]; then
     fix_database_permissions
     a2dissite 000-default
     rm -R /var/www/html/
-    # Let's make OPAC more easy to access
-    sed -i 's/Include\ \/etc\/koha\/apache-shared-opac.conf/Include\ \/etc\/koha\/apache-shared-opac.conf\n\ \ \ Serveralias\ \*/g' /etc/apache2/sites-available/$LIBRARY_NAME.conf
     service apache2 reload
     log_database_credentials
     date > /etc/configured
