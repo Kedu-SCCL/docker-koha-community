@@ -1,24 +1,34 @@
-# docker-koha-community
+- [Introduction](#introduction)
+- [For the impatients](#for-the-impatients)
+- [Environment Variables](#environment-variables)
+  - [DB_HOST](#DB_HOST)
+  - [DB_ROOT_PASSWORD](#DB_ROOT_PASSWORD)
+  - [DB_PORT](#DB_PORT)
+  - [KOHA_TRANSLATE_LANGUAGES](#KOHA_TRANSLATE_LANGUAGES)
+  - [LIBRARY_NAME](#LIBRARY_NAME)
+  - [SLEEP](#SLEEP)
+  - [DOMAIN](#DOMAIN)
+  - [INTRAPORT](#INTRAPORT)
+  - [INTRAPREFIX](#INTRAPREFIX)
+  - [INTRASUFFIX](#INTRASUFFIX)
+  - [OPACPORT](#OPACPORT)
+  - [OPACPREFIX](#OPACPREFIX)
+  - [OPACSUFFIX](#OPACSUFFIX)
+- [Allowed volumes](#allowed-volumes)
+- [Troubleshooting](#troubleshooting)
+- [Credits](#credits)
 
-Build docker image to install Koha Community
+# Introduction
 
-## (Temporary) Build the image
+Koha 
 
-1.Get the code
+[Koha community](https://wiki.koha-community.org/) with below features:
 
-```
-cd ~
-git clone git@gitlab.kedu.cat:kedu/docker-koha-community.git
-```
+* Supports external database
+* Supports multiple translation installations
+* Internal and external (OPAC) URLs completely customizable
 
-2.Build the image, in this case we will name it "**localhost/koha:0.1**"
-
-```
-cd ~/docker-koha-community
-docker build . -t localhost/koha:0.1
-```
-
-## Start docker containers and configure Koha
+# For the impatients
 
 1.Create a **docker-compose.yaml** (one is provided) with below content:
 
@@ -35,14 +45,14 @@ services:
 
   koha:
     container_name: koha
-    image: localhost/koha:0.1
+    image: kedu/koha-community
     cap_add:
         - SYS_NICE
         - DAC_READ_SEARCH
     depends_on:
         - koha-db
     environment:
-      LIBRARY_NAME: mylibrary
+      LIBRARY_NAME: koha
       SLEEP: 3
       INTRAPORT: 8080
       DB_HOST: koha-db
@@ -63,8 +73,8 @@ docker-compose up
 ```
 ====================================================
 IMPORTANT: credentials needed to post-installation through your browser
-Username: koha_mylibrary
-Password: type 'docker exec -ti d21a7f723205 koha-passwd mylibrary' to display it
+Username: koha_koha
+Password: type 'docker exec -ti d21a7f723205 koha-passwd koha' to display it
 ====================================================
 ```
 
@@ -87,3 +97,279 @@ Public (OPAC)
 http://localhost
 
 In both cases the credentials are the ones annotated at step 5
+
+# Environment Variables
+
+## DB_HOST
+
+Mandatory. Name of the database server. Should be reachable by koha container.
+
+This image has been tested with mariadb server.
+
+Example:
+
+```
+-e DB_HOST=koha-db
+```
+
+## DB_ROOT_PASSWORD
+
+Mandatory. Password of "root" account of "DB_HOST" database server.
+
+Example:
+
+```
+-e DB_ROOT_PASSWORD=secretpassword
+```
+
+## DB_PORT
+
+Optional, if not provided set up to "3306".
+
+Port where "DB_HOST" database server is listening.
+
+Example:
+
+```
+-e DB_PORT=3307
+```
+
+## KOHA_TRANSLATE_LANGUAGES
+
+Optional, if not provided set up to empty value.
+
+Comma separated list of koha translations to be installed.
+
+To get a full list of available translations:
+
+1. Start the koha docker container
+
+2. Connect to it (in this example the docker koha container is named "koha")
+
+```
+docker exec -ti koha bash
+```
+
+3. Get the list
+
+```
+koha-translate --list --available
+```
+
+Expected output similar to:
+
+```
+am-Ethi
+ar-Arab
+as-IN
+az-AZ
+be-BY
+bg-Cyrl
+bn-IN
+ca-ES
+cs-CZ
+cy-GB
+da-DK
+de-CH
+de-DE
+el-GR
+en-GB
+en-NZ
+eo
+es-ES
+eu
+fa-Arab
+fi-FI
+fo-FO
+fr-CA
+fr-FR
+ga
+gd
+gl
+he-Hebr
+hi
+hr-HR
+hu-HU
+hy-Armn
+ia
+id-ID
+iq-CA
+is-IS
+it-IT
+iu-CA
+ja-Jpan-JP
+ka
+km-KH
+kn-Knda
+ko-Kore-KP
+ku-Arab
+lo-Laoo
+lv
+mi-NZ
+ml
+mon
+mr
+ms-MY
+my
+nb-NO
+ne-NE
+nl-BE
+nl-NL
+nn-NO
+oc
+pbr
+pl-PL
+prs
+pt-BR
+pt-PT
+ro-RO
+ru-RU
+rw-RW
+sd-PK
+sk-SK
+sl-SI
+sq-AL
+sr-Cyrl
+sv-SE
+sw-KE
+ta-LK
+ta
+tet
+th-TH
+tl-PH
+tr-TR
+tvl
+uk-UA
+ur-Arab
+vi-VN
+zh-Hans-CN
+zh-Hant-TW
+```
+
+Example:
+
+```
+-e KOHA_TRANSLATE_LANGUAGES="ca-ES,es-ES"
+```
+
+## LIBRARY_NAME
+
+Optional, if not provided set up to "defaultlibraryname".
+
+String containing the library name, used by "koha-create --create-db" command.
+
+In case that you place a reverse proxy such as [jwilder/nginx-proxy](https://wiki.koha-community.org/) this value should match "VIRTUAL_HOST" (and "LETSENCRYPT_HOST" if you are using HTTPS).
+
+Example:
+
+```
+-e LIBRARY_NAME=mylibrary
+```
+
+## SLEEP
+
+Optional, if not provided set up to "45".
+
+Time in seconds that the koha image is waiting on to retry connection to external database
+
+Example:
+
+```
+-e SLEEP=3
+```
+
+## DOMAIN
+
+Optional, if not provided set up to empty value.
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+## INTRAPORT
+
+Optional, if not provided set up to "8080".
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+## INTRAPREFIX
+
+Optional, if not provided set up to empty value.
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+## INTRASUFFIX
+
+Optional, if not provided set up to empty value.
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+## OPACPORT
+
+Optional, if not provided set up to "80".
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+## OPACPREFIX
+
+Optional, if not provided set up to empty value.
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+## OPACSUFFIX
+
+Optional, if not provided set up to empty value.
+
+String to build the internal and external (OPAC) URLs:
+
+```
+# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+# Allowed volumes
+
+We recommend to map "/var/lib/koha".
+
+Example:
+
+```
+-v ~/koha:/var/lib/koha
+```
+# Troubleshooting
+
+**TODO**
+
+# Credits
+
+Some ideas has been taken from [QuantumObject/docker-koha](https://github.com/QuantumObject/docker-koha)
+
+

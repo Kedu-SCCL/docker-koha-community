@@ -10,14 +10,14 @@ services:
 
   koha:
     container_name: koha
-    image: localhost/koha:0.1
+    image: kedu/koha-community
     cap_add:
         - SYS_NICE
         - DAC_READ_SEARCH
     depends_on:
         - koha-db
     environment:
-      LIBRARY_NAME: mylibrary
+      LIBRARY_NAME: koha
       SLEEP: 3
       INTRAPORT: 8080
       DB_HOST: koha-db
