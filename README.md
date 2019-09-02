@@ -15,6 +15,7 @@
   - [OPACPREFIX](#OPACPREFIX)
   - [OPACSUFFIX](#OPACSUFFIX)
 - [Allowed volumes](#allowed-volumes)
+- [Example with reverse proxy](#example-with-reverse-proxy)
 - [Troubleshooting](#troubleshooting)
 - [Credits](#credits)
 
@@ -39,7 +40,8 @@ services:
 
   koha-db:
     container_name: koha-db
-    image: mariadb
+    # https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=23239
+    image: mariadb:10.1
     environment:
       MYSQL_ROOT_PASSWORD: koha
 
@@ -364,6 +366,34 @@ Example:
 ```
 -v ~/koha:/var/lib/koha
 ```
+# Example with reverse proxy
+
+1.Go to examples
+
+```
+cd examples
+```
+
+2.Get a ".env" file
+
+```
+cp .env.example .env
+```
+
+And adjust some settings, for instance:
+
+* APP_DOMAIN
+* APP_VIRTUAL_HOST
+* APP_LETSENCRYPT_HOST
+* DB_MYSQL_ROOT_PASSWORD
+* APP_DB_ROOT_PASSWORD
+
+3.Start the environment
+
+```
+./start.sh
+```
+
 # Troubleshooting
 
 **TODO**
