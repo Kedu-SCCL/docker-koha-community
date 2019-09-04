@@ -68,6 +68,21 @@ then
 fi
 }
 
+function start_docker_gen {
+docker ps | grep $PROXY_GEN_NAME
+# 0 Ok
+if [[ $? != 0 ]]
+then
+    echo $PROXY_GEN_NAME" was stopped. Starting it manually..."
+    docker start $PROXY_GEN_NAME
+    docker ps | grep $PROXY_GEN_NAME
+    if [[ $? != 0 ]]
+    then
+        echo "ERROR: unable to start "$PROXY_GEN_NAME
+    fi
+fi
+}
+
 ########################################
 
 check_env_file
@@ -79,3 +94,6 @@ start_db
 start_app
 
 docker-compose up -d
+
+start_docker_gen
+

@@ -29,14 +29,14 @@ services:
    - ${VOLUME_PROXY_CERTS}:/etc/nginx/certs:rw
    - /var/run/docker.sock:/var/run/docker.sock:ro
   environment:
-   - NGINX_DOCKER_GEN_CONTAINER=${PROXY_GEN_NAME}
-   - NGINX_PROXY_CONTAINER=${PROXY_NAME}
+   NGINX_DOCKER_GEN_CONTAINER: ${PROXY_GEN_NAME}
+   NGINX_PROXY_CONTAINER: ${PROXY_NAME}
   networks:
    - network-proxy
 
  proxy:
   container_name: ${PROXY_NAME}
-  image: nginx:${PROXY_VERSION}
+  image: ${PROXY_IMAGE}:${PROXY_VERSION}
   labels:
    com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
   restart: unless-stopped
@@ -52,6 +52,7 @@ services:
    - ${VOLUME_PROXY_HTPASSWD}:/etc/nginx/htpasswd:ro
   networks:
    - network-proxy
+
  app:
   container_name: ${APP_NAME}
   image: ${APP_IMAGE}:${APP_VERSION}
@@ -64,18 +65,19 @@ services:
   expose:
    - ${APP_PORT}
   environment:
-   - LIBRARY_NAME=${APP_LIBRARY_NAME}
-   - SLEEP=${APP_SLEEP}
-   - DOMAIN=${APP_DOMAIN}
-   - INTRAPORT=${APP_INTRAPORT}
-   - INTRASUFFIX=${APP_INTRASUFFIX}
-   - DB_HOST=${APP_DB_HOST}
-   - DB_ROOT_PASSWORD=${APP_DB_ROOT_PASSWORD}
-   - VIRTUAL_HOST=${APP_VIRTUAL_HOST}
-   - VIRTUAL_PORT=${APP_VIRTUAL_PORT}
-   - VIRTUAL_PROTO=${APP_VIRTUAL_PROTO}
-   - LETSENCRYPT_HOST=${APP_LETSENCRYPT_HOST}
-   - LETSENCRYPT_EMAIL=${APP_LETSENCRYPT_EMAIL}
+   LIBRARY_NAME: ${APP_LIBRARY_NAME}
+   SLEEP: ${APP_SLEEP}
+   DOMAIN: ${APP_DOMAIN}
+   INTRAPORT: ${APP_INTRAPORT}
+   INTRASUFFIX: ${APP_INTRASUFFIX}
+   DB_HOST: ${APP_DB_HOST}
+   DB_ROOT_PASSWORD: ${APP_DB_ROOT_PASSWORD}
+   VIRTUAL_HOST: ${APP_VIRTUAL_HOST}
+   VIRTUAL_PORT: ${APP_VIRTUAL_PORT}
+   VIRTUAL_PROTO: ${APP_VIRTUAL_PROTO}
+   LETSENCRYPT_HOST: ${APP_LETSENCRYPT_HOST}
+   LETSENCRYPT_EMAIL: ${APP_LETSENCRYPT_EMAIL}
+   KOHA_TRANSLATE_LANGUAGES: ${APP_KOHA_TRANSLATE_LANGUAGES}
   cap_add:
    - SYS_NICE
    - DAC_READ_SEARCH
@@ -89,7 +91,7 @@ services:
   networks:
    - network-db
   environment:
-   - MYSQL_ROOT_PASSWORD=${DB_MYSQL_ROOT_PASSWORD}
+   MYSQL_ROOT_PASSWORD: ${DB_MYSQL_ROOT_PASSWORD}
 
  ####################### networks ########################
 
