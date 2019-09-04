@@ -4,7 +4,8 @@ services:
 
   koha-db:
     container_name: koha-db
-    image: mariadb
+    # https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=23239
+    image: mariadb:10.1
     environment:
       MYSQL_ROOT_PASSWORD: koha
 
