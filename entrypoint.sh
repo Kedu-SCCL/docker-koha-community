@@ -64,10 +64,11 @@ install_koha_translate_languages () {
     done
 }
 
-install_koha_translate_languages
-
 # 1st docker container execution
 if [ ! -f /etc/configured ]; then
+    echo "*********************** Running first time configuration..."
+    echo "Installing koha translate languages..."
+    install_koha_translate_languages
     #code that need to run only one time ....
     while ! mysqladmin ping -h"$DB_HOST" --silent; do
         echo "Database server still down. Waiting $SLEEP seconds until retry"
@@ -84,14 +85,19 @@ if [ ! -f /etc/configured ]; then
     service apache2 reload
     log_database_credentials
     date > /etc/configured
-    while true
-    do
-        # Needed because 'koha-create' restarts apache and puts process in background"
-        sleep 3600
-    done
+    # Needed because 'koha-create' restarts apache and puts process in background"
+    service apache2 stop
+else
+    # 2nd+ executions
+    echo "*********************** Looks already configured"
+    echo "*********************** Starting zebra..."
+    koha-zebra --start $LIBRARY_NAME
+    echo "*********************** Starting zebra indexer..."
+    koha-indexer --start $LIBRARY_NAME 
 fi
 
-# 2nd+ executions
-echo "Looks already configured"
-log_database_credentials 
+# Common
+echo "*********************** Starting apache in foreground..."
 apachectl -D FOREGROUND
+
+
