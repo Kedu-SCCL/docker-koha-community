@@ -34,7 +34,7 @@ COPY koha-common.cnf /etc/mysql/koha-common.cnf
 #RUN koha-translate --install ca-ES
 
 # TODO: see how this can be coordinated with $INTRAPORT and $OPACPORT
-EXPOSE 80 8080
+#EXPOSE 80 8080
 
 COPY entrypoint.sh /
 
