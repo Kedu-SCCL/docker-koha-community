@@ -1,17 +1,18 @@
-version: '3.7'
+version: '3.8'
 
 services:
 
   koha-db:
     container_name: koha-db
-    # https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=23239
-    image: mariadb:10.1
     environment:
       MYSQL_ROOT_PASSWORD: koha
+    # Newer versions not working
+    image: mariadb:10.3
 
   koha:
+    build:
+      context: .
     container_name: koha
-    image: kedu/koha-community
     cap_add:
         - SYS_NICE
         - DAC_READ_SEARCH
@@ -23,6 +24,7 @@ services:
       INTRAPORT: 8080
       DB_HOST: koha-db
       DB_ROOT_PASSWORD: koha
+      KOHA_TRANSLATE_LANGUAGES: "ca-ES"
     ports:
       - "80:80"
       - "8080:8080"

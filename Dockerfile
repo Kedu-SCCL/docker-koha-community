@@ -1,12 +1,10 @@
-#name of container: docker-koha-community
-#versison of container: 0.1
 FROM debian:testing
 MAINTAINER Kedu SCCL "info@kedu.coop"
 
 RUN apt-get update && apt-get install -y \
   wget \
   gnupg \
-  mariadb-client-10.3 \
+  mariadb-client \
   perlbrew
 
 RUN wget -q -O- https://debian.koha-community.org/koha/gpg.asc | apt-key add -

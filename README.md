@@ -31,46 +31,13 @@ Koha
 
 # For the impatients
 
-1.Create a **docker-compose.yaml** (one is provided) with below content:
+1. Start the containers
 
 ```
-version: '3.7'
-
-services:
-
-  koha-db:
-    container_name: koha-db
-    # https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=23239
-    image: mariadb:10.1
-    environment:
-      MYSQL_ROOT_PASSWORD: koha
-
-  koha:
-    container_name: koha
-    image: kedu/koha-community
-    cap_add:
-        - SYS_NICE
-        - DAC_READ_SEARCH
-    depends_on:
-        - koha-db
-    environment:
-      LIBRARY_NAME: koha
-      SLEEP: 3
-      INTRAPORT: 8080
-      DB_HOST: koha-db
-      DB_ROOT_PASSWORD: koha
-    ports:
-      - "80:80"
-      - "8080:8080"
+sudo docker-compose up -d --build --force-recreate
 ```
 
-2.Start the containers
-
-```
-docker-compose up
-```
-
-3.Get the username and password for the post-install part. See below entries in the docker compose output:
+2. Get the username and password for the post-install part. See below entries in the docker compose output:
 
 ```
 ====================================================
@@ -80,15 +47,15 @@ Password: type 'docker exec -ti d21a7f723205 koha-passwd koha' to display it
 ====================================================
 ```
 
-4.Point your browsert to:
+3. Point your browsert to:
 
 http://localhost:8080
 
 And introduce the credentials annotated at step 3
 
-5.Follow the steps in the browser. At one step you will create the admin credentials. Please annotate them for later use
+4. Follow the steps in the browser. At one step you will create the admin credentials. Please annotate them for later use
 
-6.Once you finished the post-install steps, you can login to:
+5. Once you finished the post-install steps, you can login to:
 
 Admin
 
@@ -366,6 +333,7 @@ Example:
 ```
 -v ~/koha:/var/lib/koha
 ```
+
 # Example with reverse proxy
 
 1.Go to examples
