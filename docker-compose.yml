@@ -14,17 +14,22 @@ services:
       context: .
     container_name: koha
     cap_add:
-        - SYS_NICE
-        - DAC_READ_SEARCH
+      - SYS_NICE
+      - DAC_READ_SEARCH
     depends_on:
-        - koha-db
+      - koha-db
     environment:
-      LIBRARY_NAME: koha
-      SLEEP: 3
-      INTRAPORT: 8080
       DB_HOST: koha-db
       DB_ROOT_PASSWORD: koha
+      #DOMAIN: .rocagales.cat
       KOHA_TRANSLATE_LANGUAGES: "ca-ES"
+      #INTRAPORT: 80
+      INTRAPORT: 8080
+      #INTRAPREFIX: biblioteca
+      #INTRASUFFIX: .admin
+      LIBRARY_NAME: koha
+      SLEEP: 3
+    #entrypoint: tail -F /dev/null
     ports:
       - "80:80"
       - "8080:8080"

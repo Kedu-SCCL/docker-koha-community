@@ -3,9 +3,7 @@ MAINTAINER Kedu SCCL "info@kedu.coop"
 
 RUN apt-get update && apt-get install -y \
   wget \
-  gnupg \
-  mariadb-client \
-  perlbrew
+  gnupg
 
 RUN wget -q -O- https://debian.koha-community.org/koha/gpg.asc | apt-key add -
 
@@ -14,13 +12,11 @@ RUN echo 'deb http://debian.koha-community.org/koha stable main' | tee /etc/apt/
 RUN apt-get update && apt-get install -y \
   koha-common
 
-RUN perlbrew install-cpanm
-
-RUN /root/perl5/perlbrew/bin/cpanm install JSON::Validator
-
-RUN /root/perl5/perlbrew/bin/cpanm install Mojolicious::Plugin::OpenAPI
-
-RUN a2enmod rewrite cgi mpm_itk
+RUN    a2enmod rewrite \
+           headers \
+           proxy_http \
+           cgi \
+    && a2dissite 000-default
 
 # Koha specific stuff
 
