@@ -2,13 +2,6 @@ version: '3.8'
 
 services:
 
-  koha-db:
-    container_name: koha-db
-    environment:
-      MYSQL_ROOT_PASSWORD: koha
-    # Newer versions not working
-    image: mariadb:10.3
-
   koha:
     build:
       context: .
@@ -21,15 +14,27 @@ services:
     environment:
       DB_HOST: koha-db
       DB_ROOT_PASSWORD: koha
-      #DOMAIN: .rocagales.cat
+      #DOMAIN: .example.com
       KOHA_TRANSLATE_LANGUAGES: "ca-ES"
       #INTRAPORT: 80
-      INTRAPORT: 8080
-      #INTRAPREFIX: biblioteca
+      #INTRAPREFIX: library
       #INTRASUFFIX: .admin
       LIBRARY_NAME: koha
+      OPACPREFIX: library
       SLEEP: 3
     #entrypoint: tail -F /dev/null
     ports:
       - "80:80"
       - "8080:8080"
+
+  koha-db:
+    container_name: koha-db
+    environment:
+      MYSQL_ROOT_PASSWORD: koha
+    # Newer versions not working
+    image: mariadb:10.3
+
+  memcached:
+    command: memcached -m 64m
+    container_name: memcached
+    image: memcached

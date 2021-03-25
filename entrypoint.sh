@@ -1,26 +1,24 @@
 #!/bin/bash
 
 # Default values for environment variables
-LIBRARY_NAME="${LIBRARY_NAME:-defaultlibraryname}"
-SLEEP="${SLEEP:-45}"
-DOMAIN="${DOMAIN:-}"
-INTRAPORT="${INTRAPORT:-8080}"
-INTRAPREFIX="${INTRAPREFIX:-}"
-INTRASUFFIX="${INTRASUFFIX:-}"
-OPACPORT="${OPACPORT:-80}"
-OPACPREFIX="${OPACPREFIX:-}"
-OPACSUFFIX="${OPACSUFFIX:-}"
-DB_PORT="${DB_PORT:-3306}"
+export DB_PORT="${DB_PORT:-3306}"
+export DOMAIN="${DOMAIN:-}"
+export LIBRARY_NAME="${LIBRARY_NAME:-defaultlibraryname}"
+export INTRAPORT="${INTRAPORT:-8080}"
+export INTRAPREFIX="${INTRAPREFIX:-}"
+export INTRASUFFIX="${INTRASUFFIX:-}"
+export OPACPORT="${OPACPORT:-80}"
+export OPACPREFIX="${OPACPREFIX:-}"
+export OPACSUFFIX="${OPACSUFFIX:-}"
+export SLEEP="${SLEEP:-45}"
+export MEMCACHED_PREFIX=${MEMCACHED_PREFIX:-koha_}
+export MEMCACHED_SERVERS=${MEMCACHED_SERVERS:-memcached:11211}
+export USE_MEMCACHED=${USE_MEMCACHED:-yes}
+export ZEBRA_MARC_FORMAT=${ZEBRA_MARC_FORMAT:-marc21}
 
 update_koha_sites () {
     echo "*** Modifying /etc/koha/koha-sites.conf"
-    sed -i "s/_DOMAIN_/$DOMAIN/g" /etc/koha/koha-sites.conf
-    sed -i "s/_INTRAPORT_/$INTRAPORT/g" /etc/koha/koha-sites.conf
-    sed -i "s/_INTRAPREFIX_/$INTRAPREFIX/g" /etc/koha/koha-sites.conf
-    sed -i "s/_INTRASUFFIX_/$INTRASUFFIX/g" /etc/koha/koha-sites.conf
-    sed -i "s/_OPACPORT_/$OPACPORT/g" /etc/koha/koha-sites.conf
-    sed -i "s/_OPACPREFIX_/$OPACPREFIX/g" /etc/koha/koha-sites.conf
-    sed -i "s/_OPACSUFFIX_/$OPACSUFFIX/g" /etc/koha/koha-sites.conf
+    envsubst < /docker/templates/koha-sites.conf > /etc/koha/koha-sites.conf
 }
 
 update_httpd_listening_ports () {
@@ -35,9 +33,7 @@ update_httpd_listening_ports () {
 
 update_koha_database_conf () {
     echo "*** Modifying /etc/mysql/koha-common.cnf"
-    sed -i "s/_DB_HOST_/$DB_HOST/g" /etc/mysql/koha-common.cnf
-    sed -i "s/_DB_ROOT_PASSWORD_/$DB_ROOT_PASSWORD/g" /etc/mysql/koha-common.cnf
-    sed -i "s/_DB_PORT_/$DB_PORT/g" /etc/mysql/koha-common.cnf
+    envsubst < /docker/templates/koha-common.cnf > /etc/mysql/koha-common.cnf
 }
 
 fix_database_permissions () {
@@ -81,6 +77,12 @@ backup_db () {
     mysql -h $DB_HOST -u root -p$DB_ROOT_PASSWORD -e "drop database koha_$LIBRARY_NAME;"
 }
 
+update_apache2_conf () {
+    echo "*** Creating /etc/apache2/sites-available/koha.conf"
+    envsubst < /docker/templates/koha.conf > /etc/apache2/sites-available/koha.conf
+    a2ensite koha
+}
+
 # 1st docker container execution
 if [ ! -f /etc/configured ]; then
     echo "*** Running first time configuration..."
@@ -96,40 +98,26 @@ if [ ! -f /etc/configured ]; then
     if is_exists_db
     then
         echo "*** Database already exists"
-        echo "*** TODO: provide a fix"
-        # issue:
-        # failed to load external entity "/etc/koha/sites/koha/koha-conf.xml"
-        # date && time koha-mysql $LIBRARY_NAME < koha.sql
-        # koha-upgrade-schema $LIBRARY_NAME
-        # koha-rebuild-zebra -f -v $LIBRARY_NAME
-        #echo "*** Backup of database..."
-        #backup_db
     else
         echo "*** koha-create with db"
         koha-create --create-db $LIBRARY_NAME
     fi
     fix_database_permissions
-    a2dissite 000-default
     rm -R /var/www/html/
     service apache2 reload
     log_database_credentials
-    date > /etc/configured
+    if [ -n "$DOMAIN" ]
+    then
+        # Default script will always put 'InstanceName':
+        # http://{INTRAPREFIX}{InstanceName}{INTRASUFFIX}{DOMAIN}:{INTRAPORT}
+        # Below function does NOT covers all cases, but it works for a simple one:
+        # OPAC => https://library.example.com
+        # Intra => https://library.admin.example.com
+        update_apache2_conf
+    fi
     # Needed because 'koha-create' restarts apache and puts process in background"
     service apache2 stop
-: <<'END_COMMENT'
-    # TODO: review and fix it
-    if is_exists_db
-    then
-        # +- 5'
-        echo "*** Restoring backup. It cant take up 5 minutes..."
-        koha-mysql $LIBRARY_NAME < /root/backup.sql
-        echo "*** Upgrading schema..."
-        koha-upgrade-schema $LIBRARY_NAME
-        echo "*** Rebuilding zebra..."
-        koha-rebuild-zebra -f -v $LIBRARY_NAME
-    fi 
-END_COMMENT
-     
+    date > /etc/configured
 else
     # 2nd+ executions
     echo "*** Looks already configured"

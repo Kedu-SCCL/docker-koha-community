@@ -1,0 +1,10 @@
+[client]
+host     = ${DB_HOST}
+user     = root
+password = ${DB_ROOT_PASSWORD}
+port     = ${DB_PORT}
+[mysql_upgrade]
+host     = ${DB_HOST}
+user     = root
+password = ${DB_ROOT_PASSWORD}
+port     = ${DB_PORT}

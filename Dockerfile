@@ -18,20 +18,12 @@ RUN    a2enmod rewrite \
            cgi \
     && a2dissite 000-default
 
-# Koha specific stuff
+RUN mkdir /docker
 
-COPY koha-sites.conf /etc/koha/koha-sites.conf
+COPY entrypoint.sh /docker/
 
-COPY koha-common.cnf /etc/mysql/koha-common.cnf
+COPY templates /docker/templates
 
-# TODO: create a ENV variable and move it to entrypoint.sh
-#RUN koha-translate --install ca-ES
+RUN chmod +x /docker/entrypoint.sh
 
-# TODO: see how this can be coordinated with $INTRAPORT and $OPACPORT
-#EXPOSE 80 8080
-
-COPY entrypoint.sh /
-
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/docker/entrypoint.sh"]
