@@ -3,16 +3,16 @@
 # Default values for environment variables
 export DB_PORT="${DB_PORT:-3306}"
 export DOMAIN="${DOMAIN:-}"
-export LIBRARY_NAME="${LIBRARY_NAME:-defaultlibraryname}"
 export INTRAPORT="${INTRAPORT:-8080}"
 export INTRAPREFIX="${INTRAPREFIX:-}"
 export INTRASUFFIX="${INTRASUFFIX:-}"
+export LIBRARY_NAME="${LIBRARY_NAME:-defaultlibraryname}"
+export MEMCACHED_PREFIX=${MEMCACHED_PREFIX:-koha_}
+export MEMCACHED_SERVERS=${MEMCACHED_SERVERS:-memcached:11211}
 export OPACPORT="${OPACPORT:-80}"
 export OPACPREFIX="${OPACPREFIX:-}"
 export OPACSUFFIX="${OPACSUFFIX:-}"
-export SLEEP="${SLEEP:-45}"
-export MEMCACHED_PREFIX=${MEMCACHED_PREFIX:-koha_}
-export MEMCACHED_SERVERS=${MEMCACHED_SERVERS:-memcached:11211}
+export SLEEP="${SLEEP:-3}"
 export USE_MEMCACHED=${USE_MEMCACHED:-yes}
 export ZEBRA_MARC_FORMAT=${ZEBRA_MARC_FORMAT:-marc21}
 
@@ -39,6 +39,7 @@ update_koha_database_conf () {
 fix_database_permissions () {
     echo "*** Fixing database permissions to be able to use an external server"
     # TODO: restrict to the docker container private IP
+    # TODO: investigate how to change hardcoded 'koha_' preffix in database name and username creatingg '/etc/koha/sites/mykoha/koha-conf.xml.in'
     mysql -h $DB_HOST -u root -p${DB_ROOT_PASSWORD} -e "update mysql.user set Host='%' where Host='localhost' and User='koha_$LIBRARY_NAME';"
     mysql -h $DB_HOST -u root -p${DB_ROOT_PASSWORD} -e "flush privileges;"
     mysql -h $DB_HOST -u root -p${DB_ROOT_PASSWORD} -e "grant all on koha_$LIBRARY_NAME.* to 'koha_$LIBRARY_NAME'@'%';"
@@ -62,7 +63,7 @@ install_koha_translate_languages () {
 
 is_exists_db () {
     # TODO: fix hardcoded database name
-    is_exists_db=`mysql -h $DB_HOST -u root -p$DB_ROOT_PASSWORD -e "show databases like 'koha_koha';"`
+    is_exists_db=`mysql -h $DB_HOST -u root -p$DB_ROOT_PASSWORD -e "show databases like 'koha_$LIBRARY_NAME';"`
     if [ -z "$is_exists_db" ]
     then
         return 1

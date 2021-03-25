@@ -28,6 +28,7 @@ Koha
 * Supports external database
 * Supports multiple translation installations
 * Internal and external (OPAC) URLs completely customizable
+* External memcached server
 
 # For the impatients
 
@@ -227,8 +228,6 @@ Optional, if not provided set up to "defaultlibraryname".
 
 String containing the library name, used by "koha-create --create-db" command.
 
-In case that you place a reverse proxy such as [jwilder/nginx-proxy](https://wiki.koha-community.org/) this value should match "VIRTUAL_HOST" (and "LETSENCRYPT_HOST" if you are using HTTPS).
-
 Example:
 
 ```
@@ -237,14 +236,14 @@ Example:
 
 ## SLEEP
 
-Optional, if not provided set up to "45".
+Optional, if not provided set up to "3".
 
-Time in seconds that the koha image is waiting on to retry connection to external database
+Time in seconds that the koha image is waiting on to retry connection to external database when installing product for the first time.
 
 Example:
 
 ```
--e SLEEP=3
+-e SLEEP=2
 ```
 
 ## DOMAIN
@@ -254,8 +253,16 @@ Optional, if not provided set up to empty value.
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+Example:
+
+```
+-e DOMAIN=.example.com
 ```
 
 ## INTRAPORT
@@ -265,8 +272,17 @@ Optional, if not provided set up to "8080".
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+```
+Example:
+
+```
+-e INTRAPORT=80
 ```
 
 ## INTRAPREFIX
@@ -276,8 +292,16 @@ Optional, if not provided set up to empty value.
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+Example:
+
+```
+-e INTRAPREFIX=library
 ```
 
 ## INTRASUFFIX
@@ -287,8 +311,16 @@ Optional, if not provided set up to empty value.
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+Example:
+
+```
+-e INTRASUFFIX=.admin
 ```
 
 ## OPACPORT
@@ -298,8 +330,16 @@ Optional, if not provided set up to "80".
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+Example:
+
+```
+-e OPACPORT=80
 ```
 
 ## OPACPREFIX
@@ -309,8 +349,16 @@ Optional, if not provided set up to empty value.
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+Example:
+
+```
+-e OPACPREFIX=library
 ```
 
 ## OPACSUFFIX
@@ -320,8 +368,16 @@ Optional, if not provided set up to empty value.
 String to build the internal and external (OPAC) URLs:
 
 ```
-# OPAC:  http://<OPACPREFIX><INSTANCE NAME><OPACSUFFIX><DOMAIN>:<OPACPORT>
-# STAFF: http://<INTRAPREFIX><INSTANCE NAME><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+# OPAC:  http://<OPACPREFIX><OPACSUFFIX><DOMAIN>:<OPACPORT>
+# STAFF: http://<INTRAPREFIX><INTRASUFFIX><DOMAIN>:<INTRAPORT>
+```
+
+WARNING: it dows not adds instance name between 'OPACPREFIX' and 'OPACSUFFIX'
+
+Example:
+
+```
+-e OPACPREFIX=opac
 ```
 
 # Allowed volumes
@@ -334,32 +390,12 @@ Example:
 -v ~/koha:/var/lib/koha
 ```
 
-# Example with reverse proxy
+# Example with admin and OPAC listening on the same port
 
-1.Go to examples
-
-```
-cd examples
-```
-
-2.Get a ".env" file
+Below file has been provided:
 
 ```
-cp .env.example .env
-```
-
-And adjust some settings, for instance:
-
-* APP_DOMAIN
-* APP_VIRTUAL_HOST
-* APP_LETSENCRYPT_HOST
-* DB_MYSQL_ROOT_PASSWORD
-* APP_DB_ROOT_PASSWORD
-
-3.Start the environment
-
-```
-./start.sh
+docker-compose.yml.domain
 ```
 
 # Troubleshooting
@@ -369,5 +405,3 @@ And adjust some settings, for instance:
 # Credits
 
 Some ideas has been taken from [QuantumObject/docker-koha](https://github.com/QuantumObject/docker-koha)
-
-
