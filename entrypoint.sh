@@ -39,7 +39,7 @@ update_koha_database_conf () {
 fix_database_permissions () {
     echo "*** Fixing database permissions to be able to use an external server"
     # TODO: restrict to the docker container private IP
-    # TODO: investigate how to change hardcoded 'koha_' preffix in database name and username creatingg '/etc/koha/sites/mykoha/koha-conf.xml.in'
+    # TODO: investigate how to change hardcoded 'koha_' preffix in database name and username creatingg '/etc/koha/sites/${LIBRARY_NAME}/koha-conf.xml.in'
     mysql -h $DB_HOST -u root -p${DB_ROOT_PASSWORD} -e "update mysql.user set Host='%' where Host='localhost' and User='koha_$LIBRARY_NAME';"
     mysql -h $DB_HOST -u root -p${DB_ROOT_PASSWORD} -e "flush privileges;"
     mysql -h $DB_HOST -u root -p${DB_ROOT_PASSWORD} -e "grant all on koha_$LIBRARY_NAME.* to 'koha_$LIBRARY_NAME'@'%';"
@@ -72,26 +72,22 @@ is_exists_db () {
     fi
 }
 
-backup_db () {
-    # TODO: review and fix it
-    mysqldump -h $DB_HOST -u root -p$DB_ROOT_PASSWORD --databases koha_$LIBRARY_NAME > /root/backup.sql
-    mysql -h $DB_HOST -u root -p$DB_ROOT_PASSWORD -e "drop database koha_$LIBRARY_NAME;"
-}
-
 update_apache2_conf () {
-    echo "*** Creating /etc/apache2/sites-available/koha.conf"
-    envsubst < /docker/templates/koha.conf > /etc/apache2/sites-available/koha.conf
-    a2ensite koha
+    if [ -n "$DOMAIN" ]
+    then
+        # Default script will always put 'InstanceName':
+        # http://{INTRAPREFIX}{InstanceName}{INTRASUFFIX}{DOMAIN}:{INTRAPORT}
+        # Below function does NOT covers all cases, but it works for a simple one:
+        # OPAC => https://library.example.com
+        # Intra => https://library.admin.example.com
+        echo "*** Creating /etc/apache2/sites-available/${LIBRARY_NAME}.conf"
+        envsubst < /docker/templates/koha.conf > /etc/apache2/sites-available/${LIBRARY_NAME}.conf
+        a2ensite ${LIBRARY_NAME}
+    fi
 }
 
-# 1st docker container execution
-if [ ! -f /etc/configured ]; then
-    echo "*** Running first time configuration..."
-    echo "*** Installing koha translate languages..."
-    install_koha_translate_languages
-    update_koha_sites
-    update_httpd_listening_ports
-    update_koha_database_conf
+create_db () {
+    echo "*** Creating database..."
     while ! mysqladmin ping -h"$DB_HOST" --silent; do
         echo "*** Database server still down. Waiting $SLEEP seconds until retry"
         sleep $SLEEP
@@ -102,34 +98,53 @@ if [ ! -f /etc/configured ]; then
     else
         echo "*** koha-create with db"
         koha-create --create-db $LIBRARY_NAME
+        # Needed because 'koha-create' restarts apache and puts process in background"
+        service apache2 stop
+        fix_database_permissions
     fi
-    fix_database_permissions
+}
+
+enable_httpd_modules () {
+    echo "*** Enabling httpd modules..."
     rm -R /var/www/html/
-    service apache2 reload
+    a2enmod rewrite \
+      cgi \
+      headers \
+      proxy_http \
+      && a2dissite 000-default
+}
+
+enable_plack () {
+    echo "*** Enabling and starting plack..."
+    koha-plack --enable ${LIBRARY_NAME}
+}
+
+start_koha() {
+    echo "*** Starting koha with plack..."
+    koha-plack --start $LIBRARY_NAME
+    echo "*** Starting zebra indexer..."
+    koha-indexer --start $LIBRARY_NAME 
+    echo "*** Starting apache in foreground..."
+    apachectl -D FOREGROUND
+}
+
+# 1st docker container execution
+if [ ! -f /etc/configured ]; then
+    echo "*** Running first time configuration..."
+    enable_httpd_modules
+    update_koha_database_conf
+    create_db
+    enable_plack
+    update_koha_sites
+    update_httpd_listening_ports
+    install_koha_translate_languages
+
+    update_apache2_conf
     log_database_credentials
-    if [ -n "$DOMAIN" ]
-    then
-        # Default script will always put 'InstanceName':
-        # http://{INTRAPREFIX}{InstanceName}{INTRASUFFIX}{DOMAIN}:{INTRAPORT}
-        # Below function does NOT covers all cases, but it works for a simple one:
-        # OPAC => https://library.example.com
-        # Intra => https://library.admin.example.com
-        update_apache2_conf
-    fi
-    # Needed because 'koha-create' restarts apache and puts process in background"
-    service apache2 stop
     date > /etc/configured
 else
     # 2nd+ executions
     echo "*** Looks already configured"
-    echo "*** Starting zebra..."
-    koha-zebra --start $LIBRARY_NAME
-    echo "*** Starting zebra indexer..."
-    koha-indexer --start $LIBRARY_NAME 
 fi
 
-# Common
-echo "*** Starting apache in foreground..."
-apachectl -D FOREGROUND
-
-
+start_koha

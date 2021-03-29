@@ -14,7 +14,12 @@ services:
     environment:
       DB_HOST: koha-db
       DB_ROOT_PASSWORD: secret
+      DOMAIN: .example.com
       KOHA_TRANSLATE_LANGUAGES: "ca-ES"
+      INTRAPORT: 80
+      INTRAPREFIX: library
+      INTRASUFFIX: .admin
+      OPACPREFIX: library
     ports:
       - "80:80"
       - "8080:8080"
