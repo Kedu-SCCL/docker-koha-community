@@ -73,6 +73,7 @@ is_exists_db () {
 }
 
 update_apache2_conf () {
+    echo "*** Creating /etc/apache2/sites-available/${LIBRARY_NAME}.conf"
     if [ -n "$DOMAIN" ]
     then
         # Default script will always put 'InstanceName':
@@ -80,10 +81,14 @@ update_apache2_conf () {
         # Below function does NOT covers all cases, but it works for a simple one:
         # OPAC => https://library.example.com
         # Intra => https://library.admin.example.com
-        echo "*** Creating /etc/apache2/sites-available/${LIBRARY_NAME}.conf"
+
         envsubst < /docker/templates/koha.conf > /etc/apache2/sites-available/${LIBRARY_NAME}.conf
-        a2ensite ${LIBRARY_NAME}
+    else 
+        # TODO1: understand why whith this new version the automatic generation of config file looks like not working, even thouth 'INTRAPORT' variable is good
+        # TODO2: remove hardvoded values of 'templates/koha.conf' and unify it with 'templates/koha-no-domain.conf'
+        envsubst < /docker/templates/koha-no-domain.conf > /etc/apache2/sites-available/${LIBRARY_NAME}.conf
     fi
+    a2ensite ${LIBRARY_NAME}
 }
 
 create_db () {
@@ -127,6 +132,8 @@ start_koha() {
     echo "*** Starting apache in foreground..."
     apachectl -D FOREGROUND
 }
+
+echo "XXXXXXXXXXX"$INTRAPORT"XXXXXXXXXXXXXX"
 
 # 1st docker container execution
 if [ ! -f /etc/configured ]; then

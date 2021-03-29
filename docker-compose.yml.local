@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+
+  koha:
+    build:
+      context: .
+    container_name: koha
+    cap_add:
+      - SYS_NICE
+      - DAC_READ_SEARCH
+    depends_on:
+      - koha-db
+    environment:
+      DB_HOST: koha-db
+      DB_ROOT_PASSWORD: secret
+      KOHA_TRANSLATE_LANGUAGES: "ca-ES"
+      INTRAPORT: 8080
+    ports:
+      - "80:80"
+      - "8080:8080"
+
+  koha-db:
+    container_name: koha-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+    # Newer versions not working
+    image: mariadb:10.3
+
+  memcached:
+    command: memcached -m 64m
+    container_name: memcached
+    image: memcached
