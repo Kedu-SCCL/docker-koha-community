@@ -133,8 +133,6 @@ start_koha() {
     apachectl -D FOREGROUND
 }
 
-echo "XXXXXXXXXXX"$INTRAPORT"XXXXXXXXXXXXXX"
-
 # 1st docker container execution
 if [ ! -f /etc/configured ]; then
     echo "*** Running first time configuration..."
