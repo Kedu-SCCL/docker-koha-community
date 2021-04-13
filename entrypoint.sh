@@ -127,8 +127,10 @@ enable_plack () {
 start_koha() {
     echo "*** Starting koha with plack..."
     koha-plack --start $LIBRARY_NAME
-    echo "*** Starting zebra indexer..."
+    echo "*** Starting indexer..."
     koha-indexer --start $LIBRARY_NAME 
+    echo "*** Starting zebra..."
+    koha-zebra --start $LIBRARY_NAME
     echo "*** Starting apache in foreground..."
     apachectl -D FOREGROUND
 }
