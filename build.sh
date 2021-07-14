@@ -2,7 +2,7 @@
 
 # Script to build docker image
 
-# ./build.sh --registry docker-registry.kedu.cat --image koha-community --version 0.0.1
+# ./build.sh --registry docker-registry.example.com --image koha-community --version 0.0.1
 
 set -e
 
@@ -11,7 +11,7 @@ PATH_BUILD_CONTEXT=.
 
 # Each pair param/key count as 2
 if [ "$#" -lt 3 ]; then
-    printf "3 parameters are mandatory\nExample:\n./build.sh --registry docker-registry.kedu.cat --image koha-community --version 0.0.1\n"
+    printf "3 parameters are mandatory\nExample:\n./build.sh --registry docker-registry.example.com --image koha-community --version 0.0.1\n"
     exit 1
 else
     while [ $# -gt 0 ]; do
