@@ -2,7 +2,8 @@
 FROM debian:buster
 MAINTAINER Kedu SCCL "info@kedu.coop"
 
-ARG KOHA_VERSION=20.11
+# https://koha-community.org/
+ARG KOHA_VERSION=21.05
 ARG PKG_URL=https://debian.koha-community.org/koha
 
 RUN apt-get update && apt-get install -y \
