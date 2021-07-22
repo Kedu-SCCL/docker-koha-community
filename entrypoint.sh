@@ -100,6 +100,13 @@ create_db () {
     if is_exists_db
     then
         echo "*** Database already exists"
+        echo "$LIBRARY_NAME:root:$DB_ROOT_PASSWORD:koha_$LIBRARY_NAME:$DB_HOST" > /etc/koha-passwd
+        koha-create --use-db $LIBRARY_NAME --passwdfile /etc/koha-passwd
+        rm -fr /etc/koha-passwd
+        # Needed because 'koha-create' restarts apache and puts process in background"
+        service apache2 stop
+        echo "*** Manual indexing is needed..."
+        koha-rebuild-zebra -v --full $(/usr/sbin/koha-list)
     else
         echo "*** koha-create with db"
         koha-create --create-db $LIBRARY_NAME
